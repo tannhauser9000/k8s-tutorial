@@ -1,0 +1,15 @@
+kind: Service
+apiVersion: v1
+metadata:
+  name: go-get-env
+  labels:
+    app: go-get-env
+spec:
+  selector:
+    app: get-env
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: 8888
+    name: http
+  type: NodePort

@@ -1,0 +1,44 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: go-get-env
+  labels:
+    app: get-env
+spec:
+  containers:
+  - name: go-get-env
+    image: tannhauser9000/go-get-env:v0.0.5
+    env:
+      - name: "HEALTH_MAX"
+        valueFrom:
+          configMapKeyRef:
+            name: main-app-config
+            key: health-max
+      - name: "HEALTH_MIN"
+        valueFrom:
+          configMapKeyRef:
+            name: main-app-config
+            key: health-min
+      - name: "PORT0"
+        valueFrom:
+          configMapKeyRef:
+            name: main-app-config
+            key: port0
+      - name: "SIMPLE_VERSION"
+        valueFrom:
+          configMapKeyRef:
+            name: main-app-config
+            key: simple-service-version
+      - name: "APIKEY"
+        valueFrom:
+          secretKeyRef:
+            name: main-app-secret
+            key: api-key
+    ports:
+    - containerPort: 8888
+    resources:
+      limits:
+        memory: "64Mi"
+        cpu: "500m"
+  securityContext:
+    runAsUser: 1001
