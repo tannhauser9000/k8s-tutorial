@@ -9,7 +9,7 @@ spec:
     app: main
   ports:
   - protocol: TCP
-    port: 8888
+    port: 80
     targetPort: 9876
     name: http
   type: ClusterIP
