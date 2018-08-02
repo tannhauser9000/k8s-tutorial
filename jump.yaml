@@ -1,0 +1,26 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: jump
+spec:
+  containers:
+  - name: main-service
+    image: mhausenblas/simpleservice:0.5.0
+    ports:
+    - containerPort: 9876
+    resources:
+      limits:
+        memory: "64Mi"
+        cpu: "500m"
+  - name: shell
+    image: gosharplite/ubuntu:v2
+    command:
+      - "bin/bash"
+      - "-c"
+      - "sleep 10000"
+    resources:
+      limits:
+        memory: "64Mi"
+        cpu: "500m"
+  securityContext:
+    runAsUser: 1001
