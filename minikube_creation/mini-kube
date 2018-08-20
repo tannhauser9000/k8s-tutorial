@@ -9,12 +9,12 @@ _profile="minikube";
 print_usage() {
   echo "Usage: $0 <op> [flags]";
   echo "  op:";
-  echo "    delete: Delete the local Minikube cluster";
   echo "    start: Start a local Minikube cluster";
-  echo "    list: List Minikube clusters";
   echo "    stop: Stop a local Minikube cluster";
+  echo "    delete: Delete the local Minikube cluster";
+  echo "    list: List Minikube clusters";
   echo "  flags:";
-  echo "    -p: Minikube cluster profile, default: \"minikube\"";
+  echo "    -p: Minikube cluster profile name, default: \"minikube\"";
 }
 
 start_cluster() {
@@ -51,12 +51,14 @@ get_clusters() {
 
 print_clusters() {
   get_clusters;
-  echo "Local Minikube clusters:"
-  echo "------"
+  echo "Local Minikube clusters:";
+  echo "--------------------------------";
+  printf "STATUS\t|\tCLUSTER\n";
+  echo "================================";
   for ((i = 0; i < ${#_minikubes[@]}; i++)) do
-    printf "%s\t%s\n" ${_statuses[$i]} ${_minikubes[$i]};
+    printf "%s\t|\t%s\n" ${_statuses[$i]} ${_minikubes[$i]};
   done
-  echo "------"
+  echo "================================";
 }
 
 get_runningvms() {

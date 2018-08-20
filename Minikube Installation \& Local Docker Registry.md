@@ -27,7 +27,26 @@ The current latest version is `v0.28.2` and can be installed by the following co
 
 After getting all necessary components above, we can start the local Kubernetes cluster now:
 
-`./create_local`
+```
+wget https://raw.githubusercontent.com/tannhauser9000/k8s-tutorial/master/minikube_creation/mini-kube
+chmod +x mini-kube
+```
+
+**Remark**: Before using this script, please ensure that the `minikube` binary is in your system `${PATH}`.
+
+And the illustration of this script is as follows:
+
+```
+Usage: ./mini-kube <op> [flags]
+  op:
+    start: Start a local Minikube cluster
+    stop: Stop a local Minikube cluster
+    delete: Delete the local Minikube cluster
+    list: List Minikube clusters
+  flags:
+    -p: Minikube cluster profile name, default: "minikube"
+
+```
 
 ### Minikube Usage
 
@@ -55,11 +74,19 @@ In this section, we will have a brief illustration about the commands of `miniku
 
 #### Cluster Operating
 
-Due to some customization of this tutorial, we strongly suggest use the provieded script in ***Start Local Cluster*** section to manipulate your Minikube clusters.
+Due to some customization of this tutorial, use the provieded script in ***Start Local Cluster*** section to manipulate your Minikube clusters is **STRONGLY SUGGESTED**.
 
 - `start`: Start the Minikube cluster
 - `stop`: Stop the Minikube cluster (will cause the restart of `storage-provisioner` and `kubernetes-dashboard`)
 - `delete`: Destroy the current Minikube cluster
+
+### Cluster Switching between Multiple Minikube Clusters
+
+You can use `kubectl config get-contexts` to list available K8s contexts, and use the following command to switch to the desired cluster:
+
+```
+kubectl config use-context <your cluster profile name>
+```
 
 ## Local Docker Registry
 
@@ -67,10 +94,11 @@ To setup a local Docker registry, please use the following command:
 
 `kubectl create -f https://raw.githubusercontent.com/tannhauser9000/k8s-tutorial/master/minikube_creation/docker-registry/local-registry.yml`
 
-After creating the local Docker registry, you can use the following command to list the local docker registry:
+After creating the local Docker registry, you can access the RESTful API of the local docker registry use the following command:
 
 ```
-export _LOCAL_DOCKER="http://$(minikube ip):5000";
+export _CLUSTER_NAME=<your cluster profile name>
+export _LOCAL_DOCKER="http://$(minikube ip -p ${_CLUSTER_NAME}):5000";
 curl -s ${_LOCAL_DOCKER}/v2/_catalog
 ```
 
