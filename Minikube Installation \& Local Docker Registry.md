@@ -29,7 +29,48 @@ After getting all necessary components above, we can start the local Kubernetes 
 
 `./create_local`
 
+### Minikube Usage
+
+In this section, we will have a brief illustration about the commands of `minikube`:
+
+#### Information Retrieval & Debugging
+
+- `dashboard`: Open or print the URL of K8s dashboard for the local cluster
+  - Open dashboard: `minikube dashboard`
+  - Print dashboard URL: `minikube dashboard --url`
+- `docker-env`: Set up or unset Docker related environment variables
+  - Set up: `eval $(minikube docker-env)`
+  - Unset: `eval $(minikube docker-env -u)`
+- `get-k8s-versions`: List available K8s versions for the minikube
+- `ip`: Get Minikube cluster IP
+- `logs`: Minikube cluster debugging log
+- `service`: Print or open K8s service URL
+  - List services: `minikube service list`
+  - Open K8s dashboard: `minikube service kubernetes-dashboard -n kube-system`
+  - Print URL for K8s dashboard: `minikube service kubernetes-dashboard -n kube-system --url`
+- `ssh`: Connect to Minikube node via `ssh`
+- `ssh-key`: Get path to ssh key for `minikube ssh`
+- `update-check`: Check the current and latest version of Minikube
+- `update-context`: Update context of Minikube cluster to `kubeconfig` (`~/.kube/config` by default)
+
+#### Cluster Operating
+
+Due to some customization of this tutorial, we strongly suggest use the provieded script in ***Start Local Cluster*** section to manipulate your Minikube clusters.
+
+- `start`: Start the Minikube cluster
+- `stop`: Stop the Minikube cluster (will cause the restart of `storage-provisioner` and `kubernetes-dashboard`)
+- `delete`: Destroy the current Minikube cluster
+
 ## Local Docker Registry
 
-To setup a local Docker registry
+To setup a local Docker registry, please use the following command:
+
+`kubectl create -f https://raw.githubusercontent.com/tannhauser9000/k8s-tutorial/master/minikube_creation/docker-registry/local-registry.yml`
+
+After creating the local Docker registry, you can use the following command to list the local docker registry:
+
+```
+export _LOCAL_DOCKER="http://$(minikube ip):5000";
+curl -s ${_LOCAL_DOCKER}/v2/_catalog
+```
 

@@ -1,0 +1,148 @@
+#!/bin/bash
+
+_home=$(echo $0 | awk -F"$(basename $0)" '{print $1}');
+
+_conf_d=("https://raw.githubusercontent.com/tannhauser9000/k8s-tutorial/master/minikube_creation/conf.d/00.privileged.yaml" "https://raw.githubusercontent.com/tannhauser9000/k8s-tutorial/master/minikube_creation/conf.d/01.restricted.yaml" "https://raw.githubusercontent.com/tannhauser9000/k8s-tutorial/master/minikube_creation/conf.d/02.psp-privilege.yaml" "https://raw.githubusercontent.com/tannhauser9000/k8s-tutorial/master/minikube_creation/conf.d/03.psp-restricted.yaml");
+
+_profile="minikube";
+
+print_usage() {
+  echo "Usage: $0 <op> [flags]";
+  echo "  op:";
+  echo "    delete: Delete the local Minikube cluster";
+  echo "    start: Start a local Minikube cluster";
+  echo "    list: List Minikube clusters";
+  echo "    stop: Stop a local Minikube cluster";
+  echo "  flags:";
+  echo "    -p: Minikube cluster profile, default: \"minikube\"";
+}
+
+start_cluster() {
+  time minikube start -p ${_profile} --extra-config=apiserver.admission-control="NamespaceLifecycle,LimitRanger,ServiceAccount,PersistentVolumeLabel,DefaultStorageClass,ResourceQuota,DefaultTolerationSeconds,PodSecurityPolicy" --insecure-registry localhost:5000
+}
+
+get_clusters() {
+  _clusters=($(kubectl config get-clusters | grep -v -e "^NAME"));
+  get_vms;
+  get_runningvms;
+  _minikubes=();
+  _statuses=();
+  for _src in ${_clusters[@]}; do
+    for _tgt in ${_vms[@]}; do
+      if [ "x${_src}" == "x${_tgt}" ]; then
+        _minikubes=(${_minikubes[@]} ${_src});
+      fi
+    done
+  done
+  for ((i = 0; i < ${#_minikubes[@]}; i++)); do
+    _find=false;
+    for _item in ${_running[@]}; do
+      if [ "x${_minikubes[$i]}" == "x${_item}" ]; then
+        _find=true;
+      fi
+    done
+    if ${_find}; then
+      _statuses=(${_statuses[@]} "running");
+    else
+      _statuses=(${_statuses[@]} "pause");
+    fi
+  done
+}
+
+print_clusters() {
+  get_clusters;
+  echo "Local Minikube clusters:"
+  echo "------"
+  for ((i = 0; i < ${#_minikubes[@]}; i++)) do
+    printf "%s\t%s\n" ${_statuses[$i]} ${_minikubes[$i]};
+  done
+  echo "------"
+}
+
+get_runningvms() {
+  _running=();
+  _running=($(VBoxManage list runningvms | awk -F"\"" '{print $2}'));
+}
+
+get_vms() {
+  _vms=();
+  _vms=($(VBoxManage list vms | awk -F"\"" '{print $2}'));
+}
+
+check_cluster() {
+  _init=false;
+  get_vms;
+  for _item in ${_vms[@]}; do
+    if [ "x${_item}" == "x${_profile}" ]; then
+      _init=true;
+      break;
+    fi
+  done
+}
+
+check_status() {
+  while true; do
+    _current=$(kubectl config current-context);
+    _ready=$(kubectl get componentstatuses 2>&1|grep Healthy|wc -l);
+    if [ "x${_current}" == "x${_profile}" ] && [ ${_ready} -eq 3 ]; then
+      for _item in ${_conf_d[@]}; do
+        kubectl create -f ${_item};
+      done
+      echo "cluster is good to go!";
+      exit 0;
+    fi
+    sleep 1;
+#    echo "cluster not ready yet!";
+  done
+}
+
+stop_cluster() {
+  minikube stop -p ${_profile};
+}
+
+delete_cluster() {
+  minikube delete -p ${_profile};
+  kubectl config delete-context ${_profile};
+  kubectl config delete-cluster ${_profile};
+  echo "Minikube cluster deleted.";
+}
+
+parse_flag() {
+  _parm=($@);
+  for((i = 0; i < ${#_parm[@]} - 1; i++)); do
+    if [ "x${_parm[$i]}" == "x-p" ]; then
+      _profile=${_parm[$((i + 1))]};
+      break;
+    fi
+  done
+}
+
+if [ $# -ne 1 ] && [ $# -ne 3 ]; then
+  print_usage;
+  exit 1;
+fi
+
+parse_flag $@;
+
+case $1 in
+  "start")
+    check_cluster;
+    if ! ${_init}; then
+      check_status&
+    fi
+    start_cluster;
+    ;;
+  "stop")
+    stop_cluster;
+    ;;
+  "list")
+    print_clusters;
+    ;;
+  "delete")
+    delete_cluster;
+    ;;
+  *)
+    print_usage;
+    exit 1;
+    ;;
+esac
