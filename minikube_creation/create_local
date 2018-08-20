@@ -1,0 +1,26 @@
+#!/bin/bash
+
+_home=$(echo $0 | awk -F"$(basename $0)" '{print $1}');
+_conf="${_home}conf.d/";
+
+create_cluster() {
+  time minikube start --extra-config=apiserver.admission-control="NamespaceLifecycle,LimitRanger,ServiceAccount,PersistentVolumeLabel,DefaultStorageClass,ResourceQuota,DefaultTolerationSeconds,PodSecurityPolicy" --insecure-registry localhost:5000
+}
+
+check_status() {
+  while true; do
+    _ready=$(kubectl get componentstatuses 2>&1|grep Healthy|wc -l);
+    if [ ${_ready} -eq 3 ]; then
+      for i in {0..3}; do
+        kubectl create -f $(ls -al ${_conf}0${i}.*|awk '{print $NF}');
+      done
+      echo "cluster is good to go!";
+      exit 0;
+    fi
+    sleep 1;
+#    echo "cluster not ready yet!";
+  done
+}
+
+check_status&
+create_cluster;
