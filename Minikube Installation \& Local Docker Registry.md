@@ -25,6 +25,8 @@ The current latest version is `v0.28.2` and can be installed by the following co
 
 ### Start Local Cluster
 
+#### Mac Users
+
 After getting all necessary components above, we can start the local Kubernetes cluster now:
 
 ```
@@ -54,6 +56,33 @@ As a result, you can simply use the following commands to manipulate you local M
 - Suspend: `./mini-kube stop`
 - Cleanup: `./mini-kube delete`
 - List clusters: `./mini-kube list`
+
+#### Ubuntu Users
+
+Since I got no available Ubuntu now, the control script for Ubuntu environment is very basic:
+
+```
+wget https://raw.githubusercontent.com/user9000/k8s-tutorial/master/minikube_creation/mini-kube -O mini-kube
+chmod +x mini-kube
+```
+
+The usage is:
+
+```
+Usage: ./mini-kube.ubuntu <op>
+  op:
+    start: Start a local Minikube cluster
+    stop: Stop a local Minikube cluster
+    delete: Delete the local Minikube cluster
+```
+
+And you can simply use the following commands to manipulate you local Minikube cluster:
+
+- Initialze and start: `./mini-kube start`
+- Suspend: `./mini-kube stop`
+- Cleanup: `./mini-kube delete`
+
+**Remark**: Once I get a workable Ubuntu environment, I'll improve the control script ASAP.
 
 ### Minikube Usage
 

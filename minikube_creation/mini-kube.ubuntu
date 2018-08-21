@@ -1,0 +1,80 @@
+#!/bin/bash
+
+_home=$(echo $0 | awk -F"$(basename $0)" '{print $1}');
+
+_conf_d=("https://raw.githubusercontent.com/tannhauser9000/k8s-tutorial/master/minikube_creation/conf.d/00.privileged.yaml" "https://raw.githubusercontent.com/tannhauser9000/k8s-tutorial/master/minikube_creation/conf.d/01.restricted.yaml" "https://raw.githubusercontent.com/tannhauser9000/k8s-tutorial/master/minikube_creation/conf.d/02.psp-privilege.yaml" "https://raw.githubusercontent.com/tannhauser9000/k8s-tutorial/master/minikube_creation/conf.d/03.psp-restricted.yaml");
+
+_profile="minikube";
+
+print_usage() {
+  echo "Usage: $0 <op>";
+  echo "  op:";
+  echo "    start: Start a local Minikube cluster";
+  echo "    stop: Stop a local Minikube cluster";
+  echo "    delete: Delete the local Minikube cluster";
+}
+
+start_cluster() {
+  time minikube start -p ${_profile} --extra-config=apiserver.admission-control="NamespaceLifecycle,LimitRanger,ServiceAccount,PersistentVolumeLabel,DefaultStorageClass,ResourceQuota,DefaultTolerationSeconds,PodSecurityPolicy" --insecure-registry localhost:5000
+}
+
+check_status() {
+  while true; do
+    _current=$(kubectl config current-context);
+    _ready=$(kubectl get componentstatuses 2>&1|grep Healthy|wc -l);
+    if [ "x${_current}" == "x${_profile}" ] && [ ${_ready} -eq 3 ]; then
+      for _item in ${_conf_d[@]}; do
+        kubectl create -f ${_item};
+      done
+      echo "cluster is good to go!";
+      exit 0;
+    fi
+    sleep 1;
+#    echo "cluster not ready yet!";
+  done
+}
+
+stop_cluster() {
+  minikube stop -p ${_profile};
+}
+
+delete_cluster() {
+  minikube delete -p ${_profile};
+  kubectl config delete-context ${_profile};
+  kubectl config delete-cluster ${_profile};
+  echo "Minikube cluster deleted.";
+}
+
+parse_flag() {
+  _parm=($@);
+  for((i = 0; i < ${#_parm[@]} - 1; i++)); do
+    if [ "x${_parm[$i]}" == "x-p" ]; then
+      _profile=${_parm[$((i + 1))]};
+      break;
+    fi
+  done
+}
+
+if [ $# -ne 1 ] && [ $# -ne 3 ]; then
+  print_usage;
+  exit 1;
+fi
+
+parse_flag $@;
+
+case $1 in
+  "start")
+    check_status&
+    start_cluster;
+    ;;
+  "stop")
+    stop_cluster;
+    ;;
+  "delete")
+    delete_cluster;
+    ;;
+  *)
+    print_usage;
+    exit 1;
+    ;;
+esac
