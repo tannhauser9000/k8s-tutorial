@@ -98,6 +98,12 @@ check_status() {
   done
 }
 
+start_psp() {
+  for _item in ${_conf_d[@]}; do
+    kubectl create -f ${_item};
+  done
+}
+
 stop_cluster() {
   minikube stop -p ${_profile};
 }
@@ -129,10 +135,11 @@ parse_flag $@;
 case $1 in
   "start")
     check_cluster;
-    if ! ${_init}; then
-      check_status&
-    fi
+#    if ! ${_init}; then
+#      check_status&
+#    fi
     start_cluster;
+    start_psp;
     ;;
   "stop")
     stop_cluster;
