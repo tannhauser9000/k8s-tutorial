@@ -82,22 +82,6 @@ check_cluster() {
   done
 }
 
-check_status() {
-  while true; do
-    _current=$(kubectl config current-context);
-    _ready=$(kubectl get componentstatuses 2>&1|grep Healthy|wc -l);
-    if [ "x${_current}" == "x${_profile}" ] && [ ${_ready} -eq 3 ]; then
-      for _item in ${_conf_d[@]}; do
-        kubectl create -f ${_item};
-      done
-      echo "cluster is good to go!";
-      exit 0;
-    fi
-    sleep 1;
-#    echo "cluster not ready yet!";
-  done
-}
-
 start_psp() {
   for _item in ${_conf_d[@]}; do
     kubectl create -f ${_item};
@@ -139,7 +123,9 @@ case $1 in
 #      check_status&
 #    fi
     start_cluster;
-    start_psp;
+    if ! ${_init}; then
+      start_psp;
+    fi
     ;;
   "stop")
     stop_cluster;
